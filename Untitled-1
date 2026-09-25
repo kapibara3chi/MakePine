@@ -1,0 +1,272 @@
+//@version=6
+indicator("Sector & SOX RRG [Custom v4 Modified]", overlay=false, max_lines_count=500, max_labels_count=500)
+
+// --- 1. 設定項目 (Inputs) ---
+bench      = input.symbol("SPY", "ベンチマーク (基準)")
+len        = input.int(14, "RRG計算期間 (Period)")
+tail_len   = input.int(20, "過去の推移表示期間 (Tail Length / バー数)", minval=1, maxval=100)
+x_mult     = input.float(2.0, "X軸の横幅スケール (X-Axis Scale)")
+show_table = input.bool(true, "右上に凡例テーブルを表示", group="表示設定")
+
+// 監視対象のティッカー、表示名、カラー設定 (全18銘柄)
+show1 = input.bool(true, "表示 1", inline="1")
+sym1  = input.symbol("SOXX", "Symbol 1", inline="1")
+name1 = input.string("SOXX (半導体)", "表示名 1", inline="1")
+col1  = input.color(color.aqua, "カラー 1", inline="1")
+
+show2 = input.bool(true, "表示 2", inline="2")
+sym2  = input.symbol("SPXL", "Symbol 2", inline="2")
+name2 = input.string("SPXL (S&Pブル3倍)", "表示名 2", inline="2")
+col2  = input.color(color.green, "カラー 2", inline="2")
+
+show3 = input.bool(true, "表示 3", inline="3")
+sym3  = input.symbol("XLK",  "Symbol 3", inline="3")
+name3 = input.string("XLK (情報技術)", "表示名 3", inline="3")
+col3  = input.color(color.fuchsia, "カラー 3", inline="3")
+
+show4 = input.bool(true, "表示 4", inline="4")
+sym4  = input.symbol("XLF",  "Symbol 4", inline="4")
+name4 = input.string("XLF (金融)", "表示名 4", inline="4")
+col4  = input.color(color.orange, "カラー 4", inline="4")
+
+show5 = input.bool(true, "表示 5", inline="5")
+sym5  = input.symbol("XLE",  "Symbol 5", inline="5")
+name5 = input.string("XLE (エネルギー)", "表示名 5", inline="5")
+col5  = input.color(color.red, "カラー 5", inline="5")
+
+show6 = input.bool(true, "表示 6", inline="6")
+sym6  = input.symbol("XLV",  "Symbol 6", inline="6")
+name6 = input.string("XLV (ヘルスケア)", "表示名 6", inline="6")
+col6  = input.color(color.teal, "カラー 6", inline="6")
+
+show7 = input.bool(true, "表示 7", inline="7")
+sym7  = input.symbol("XLY",  "Symbol 7", inline="7")
+name7 = input.string("XLY (一般消費財)", "表示名 7", inline="7")
+col7  = input.color(color.purple, "カラー 7", inline="7")
+
+show8 = input.bool(true, "表示 8", inline="8")
+sym8  = input.symbol("GLD",  "Symbol 8", inline="8")
+name8 = input.string("GLD (ゴールド)", "表示名 8", inline="8")
+col8  = input.color(color.yellow, "カラー 8", inline="8")
+
+show9 = input.bool(true, "表示 9", inline="9")
+sym9  = input.symbol("XLP",  "Symbol 9", inline="9")
+name9 = input.string("XLP (生活必需品)", "表示名 9", inline="9")
+col9  = input.color(color.gray, "カラー 9", inline="9")
+
+// --- 追加銘柄 (10〜18) ---
+show10 = input.bool(true, "表示 10", inline="10")
+sym10  = input.symbol("XLI",  "Symbol 10", inline="10")
+name10 = input.string("XLI (資本財)", "表示名 10", inline="10")
+col10  = input.color(color.lime, "カラー 10", inline="10")
+
+show11 = input.bool(true, "表示 11", inline="11")
+sym11  = input.symbol("XLB",  "Symbol 11", inline="11")
+name11 = input.string("XLB (素材)", "表示名 11", inline="11")
+col11  = input.color(color.maroon, "カラー 11", inline="11")
+
+show12 = input.bool(true, "表示 12", inline="12")
+sym12  = input.symbol("XLU",  "Symbol 12", inline="12")
+name12 = input.string("XLU (公益事業)", "表示名 12", inline="12")
+col12  = input.color(color.navy, "カラー 12", inline="12")
+
+show13 = input.bool(true, "表示 13", inline="13")
+sym13  = input.symbol("XLRE", "Symbol 13", inline="13")
+name13 = input.string("XLRE (不動産)", "表示名 13", inline="13")
+col13  = input.color(color.olive, "カラー 13", inline="13")
+
+show14 = input.bool(true, "表示 14", inline="14")
+sym14  = input.symbol("XLC",  "Symbol 14", inline="14")
+name14 = input.string("XLC (通信サービス)", "表示名 14", inline="14")
+col14  = input.color(color.blue, "カラー 14", inline="14")
+
+show15 = input.bool(true, "表示 15", inline="15")
+sym15  = input.symbol("LABU", "Symbol 15", inline="15")
+name15 = input.string("LABU (バイオブル3倍)", "表示名 15", inline="15")
+col15  = input.color(color.silver, "カラー 15", inline="15")
+
+show16 = input.bool(true, "表示 16", inline="16")
+sym16  = input.symbol("CURE", "Symbol 16", inline="16")
+name16 = input.string("CURE (医療ブル3倍)", "表示名 16", inline="16")
+col16  = input.color(color.rgb(0, 200, 150), "カラー 16", inline="16")
+
+show17 = input.bool(true, "表示 17", inline="17")
+sym17  = input.symbol("SOXL", "Symbol 17", inline="17")
+name17 = input.string("SOXL (半導体ブル3倍)", "表示名 17", inline="17")
+col17  = input.color(color.rgb(0, 255, 255), "カラー 17", inline="17") // ★ color.cyan からRGB指定に修正
+
+show18 = input.bool(true, "表示 18", inline="18")
+sym18  = input.symbol("UDOW", "Symbol 18", inline="18")
+name18 = input.string("UDOW (ダウブル3倍)", "表示名 18", inline="18")
+col18  = input.color(color.rgb(50, 205, 50), "カラー 18", inline="18")
+
+
+// --- 2. RRG計算ロジック ---
+f_rrg(sym, b_ticker, length) =>
+    s_close = request.security(sym, timeframe.period, close, ignore_invalid_symbol=true)
+    b_close = request.security(b_ticker, timeframe.period, close, ignore_invalid_symbol=true)
+    rs = s_close / b_close
+    
+    dev1 = ta.stdev(rs, length)
+    dev1 := dev1 == 0 or na(dev1) ? 0.0001 : dev1
+    rs_ratio = 100 + ((rs - ta.sma(rs, length)) / dev1) * 3
+    
+    dev2 = ta.stdev(rs_ratio, length)
+    dev2 := dev2 == 0 or na(dev2) ? 0.0001 : dev2
+    rs_mom = 100 + ((rs_ratio - ta.sma(rs_ratio, length)) / dev2) * 3
+    
+    [rs_ratio, rs_mom]
+
+// --- 3. データ取得と履歴バッファの強制確保 ---
+[r1, m1] = f_rrg(sym1, bench, len)
+max_bars_back(r1, 100), max_bars_back(m1, 100)
+[r2, m2] = f_rrg(sym2, bench, len)
+max_bars_back(r2, 100), max_bars_back(m2, 100)
+[r3, m3] = f_rrg(sym3, bench, len)
+max_bars_back(r3, 100), max_bars_back(m3, 100)
+[r4, m4] = f_rrg(sym4, bench, len)
+max_bars_back(r4, 100), max_bars_back(m4, 100)
+[r5, m5] = f_rrg(sym5, bench, len)
+max_bars_back(r5, 100), max_bars_back(m5, 100)
+[r6, m6] = f_rrg(sym6, bench, len)
+max_bars_back(r6, 100), max_bars_back(m6, 100)
+[r7, m7] = f_rrg(sym7, bench, len)
+max_bars_back(r7, 100), max_bars_back(m7, 100)
+[r8, m8] = f_rrg(sym8, bench, len)
+max_bars_back(r8, 100), max_bars_back(m8, 100)
+[r9, m9] = f_rrg(sym9, bench, len)
+max_bars_back(r9, 100), max_bars_back(m9, 100)
+[r10, m10] = f_rrg(sym10, bench, len)
+max_bars_back(r10, 100), max_bars_back(m10, 100)
+[r11, m11] = f_rrg(sym11, bench, len)
+max_bars_back(r11, 100), max_bars_back(m11, 100)
+[r12, m12] = f_rrg(sym12, bench, len)
+max_bars_back(r12, 100), max_bars_back(m12, 100)
+[r13, m13] = f_rrg(sym13, bench, len)
+max_bars_back(r13, 100), max_bars_back(m13, 100)
+[r14, m14] = f_rrg(sym14, bench, len)
+max_bars_back(r14, 100), max_bars_back(m14, 100)
+[r15, m15] = f_rrg(sym15, bench, len)
+max_bars_back(r15, 100), max_bars_back(m15, 100)
+[r16, m16] = f_rrg(sym16, bench, len)
+max_bars_back(r16, 100), max_bars_back(m16, 100)
+[r17, m17] = f_rrg(sym17, bench, len)
+max_bars_back(r17, 100), max_bars_back(m17, 100)
+[r18, m18] = f_rrg(sym18, bench, len)
+max_bars_back(r18, 100), max_bars_back(m18, 100)
+
+// --- 象限名判定関数 ---
+f_quad_info(r, m) =>
+    if r >= 100 and m >= 100
+        ["Leading (先行)", color.green]
+    else if r < 100 and m >= 100
+        ["Improving (改善)", color.blue]
+    else if r < 100 and m < 100
+        ["Lagging (遅行)", color.red]
+    else
+        ["Weakening (衰退)", color.orange]
+
+// --- 4. 描画用配列とオブジェクト ---
+var rrg_lines  = array.new<line>()
+var rrg_labels = array.new<label>()
+var legend_tbl = table.new(position.top_right, 3, 20, bgcolor=color.new(color.black, 30), border_color=color.gray, border_width=1)
+
+f_draw(show, name_str, r, m, col, origin_x, row_idx) =>
+    if show and barstate.islast and not na(r[0]) and not na(m[0])
+        for i = tail_len - 1 to 0
+            if not na(r[i+1]) and not na(m[i+1]) and not na(r[i]) and not na(m[i])
+                x_past = origin_x + (r[i+1] - 100) * x_mult
+                y_past = m[i+1]
+                x_curr = origin_x + (r[i] - 100) * x_mult
+                y_curr = m[i]
+                
+                ratio = float(i) / tail_len
+                transp = int(ratio * 85)
+                line_col = color.new(col, transp)
+                line_width = i < 4 ? 2 : 1
+                
+                array.push(rrg_lines, line.new(int(x_past), y_past, int(x_curr), y_curr, color=line_col, width=line_width))
+                
+                if i > 0 and (i % 3 == 0 or i == tail_len - 1)
+                    array.push(rrg_labels, label.new(int(x_past), y_past, "●", style=label.style_none, textcolor=line_col, size=size.tiny))
+
+        x_now = origin_x + (r[0] - 100) * x_mult
+        y_now = m[0]
+        array.push(rrg_labels, label.new(int(x_now), y_now, "", style=label.style_circle, color=col, size=size.tiny))
+
+        if show_table and row_idx > 0
+            [quad_str, quad_col] = f_quad_info(r[0], m[0])
+            table.cell(legend_tbl, 0, row_idx, "", bgcolor=col, width=2)
+            table.cell(legend_tbl, 1, row_idx, name_str, text_color=color.white, text_size=size.small, text_halign=text.align_left)
+            table.cell(legend_tbl, 2, row_idx, quad_str, text_color=quad_col, text_size=size.small, text_halign=text.align_left)
+
+// サブウィンドウのY軸スケール固定用プロット
+plot(115, color=color.new(color.black, 100)) 
+plot(85, color=color.new(color.black, 100))
+plot(100, color=color.new(color.gray, 80), style=plot.style_cross, linewidth=1) 
+
+origin_x = bar_index - 35
+
+if barstate.islast
+    if array.size(rrg_lines) > 0
+        for i = 0 to array.size(rrg_lines) - 1
+            line.delete(array.get(rrg_lines, i))
+    array.clear(rrg_lines)
+    
+    if array.size(rrg_labels) > 0
+        for i = 0 to array.size(rrg_labels) - 1
+            label.delete(array.get(rrg_labels, i))
+    array.clear(rrg_labels)
+    
+    array.push(rrg_lines, line.new(origin_x - 60, 100, origin_x + 60, 100, color=color.new(color.gray, 50), width=1))
+    array.push(rrg_lines, line.new(origin_x, 80, origin_x, 120, color=color.new(color.gray, 50), width=1))
+    
+    array.push(rrg_labels, label.new(origin_x + 30, 112, "Leading\n(先行)", textcolor=color.new(color.green, 20), style=label.style_none, size=size.normal))
+    array.push(rrg_labels, label.new(origin_x + 30, 88, "Weakening\n(衰退)", textcolor=color.new(color.orange, 20), style=label.style_none, size=size.normal))
+    array.push(rrg_labels, label.new(origin_x - 30, 88, "Lagging\n(遅行)", textcolor=color.new(color.red, 20), style=label.style_none, size=size.normal))
+    array.push(rrg_labels, label.new(origin_x - 30, 112, "Improving\n(改善)", textcolor=color.new(color.blue, 20), style=label.style_none, size=size.normal))
+
+    if show_table
+        table.cell(legend_tbl, 0, 0, "色", text_color=color.gray, text_size=size.small)
+        table.cell(legend_tbl, 1, 0, "銘柄名", text_color=color.gray, text_size=size.small, text_halign=text.align_left)
+        table.cell(legend_tbl, 2, 0, "現在象限", text_color=color.gray, text_size=size.small, text_halign=text.align_left)
+
+// ★ テーブルの行番号を詰める計算
+row1  = show1  ? 1 : 0
+row2  = show2  ? row1 + 1 : row1
+row3  = show3  ? row2 + 1 : row2
+row4  = show4  ? row3 + 1 : row3
+row5  = show5  ? row4 + 1 : row4
+row6  = show6  ? row5 + 1 : row5
+row7  = show7  ? row6 + 1 : row6
+row8  = show8  ? row7 + 1 : row7
+row9  = show9  ? row8 + 1 : row8
+row10 = show10 ? row9 + 1 : row9
+row11 = show11 ? row10 + 1 : row10
+row12 = show12 ? row11 + 1 : row11
+row13 = show13 ? row12 + 1 : row12
+row14 = show14 ? row13 + 1 : row13
+row15 = show15 ? row14 + 1 : row14
+row16 = show16 ? row15 + 1 : row15
+row17 = show17 ? row16 + 1 : row16
+row18 = show18 ? row17 + 1 : row17
+
+// ★ 各銘柄の描画実行
+f_draw(show1,  name1,  r1,  m1,  col1,  origin_x, row1)
+f_draw(show2,  name2,  r2,  m2,  col2,  origin_x, row2)
+f_draw(show3,  name3,  r3,  m3,  col3,  origin_x, row3)
+f_draw(show4,  name4,  r4,  m4,  col4,  origin_x, row4)
+f_draw(show5,  name5,  r5,  m5,  col5,  origin_x, row5)
+f_draw(show6,  name6,  r6,  m6,  col6,  origin_x, row6)
+f_draw(show7,  name7,  r7,  m7,  col7,  origin_x, row7)
+f_draw(show8,  name8,  r8,  m8,  col8,  origin_x, row8)
+f_draw(show9,  name9,  r9,  m9,  col9,  origin_x, row9)
+f_draw(show10, name10, r10, m10, col10, origin_x, row10)
+f_draw(show11, name11, r11, m11, col11, origin_x, row11)
+f_draw(show12, name12, r12, m12, col12, origin_x, row12)
+f_draw(show13, name13, r13, m13, col13, origin_x, row13)
+f_draw(show14, name14, r14, m14, col14, origin_x, row14)
+f_draw(show15, name15, r15, m15, col15, origin_x, row15)
+f_draw(show16, name16, r16, m16, col16, origin_x, row16)
+f_draw(show17, name17, r17, m17, col17, origin_x, row17)
+f_draw(show18, name18, r18, m18, col18, origin_x, row18) // ★ origin_xの引数漏れを修正
